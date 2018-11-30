@@ -2,7 +2,7 @@ var DATATABLES_CONSTANT = {
           
     // datatables常量  
     DATA_TABLES : {  
-        DEFAULT_OPTION : { // DataTables初始化选项  
+        SERVER_SIDE_OPTION : { // DataTables初始化选项
         	oLanguage : {  
                 sProcessing : "处理中...",  
                 sLengthMenu : "每页 _MENU_ 项",//"显示 _MENU_ 项结果,",  
@@ -39,7 +39,7 @@ var DATATABLES_CONSTANT = {
             processing : false,  
             // 启用服务器端分页  
             serverSide : true,  
-            // 禁用原生搜索  
+            // 禁用原生搜索
             searching : false,
             //自定义布局
             sDom:'rt<"bottom"lpfi<"clear">>',//定义分页等 的布局 f:过滤 p 分页 i 信息 l 每页数据量
