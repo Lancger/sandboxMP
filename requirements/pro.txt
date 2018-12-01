@@ -5,3 +5,5 @@ ipython==7.1.1
 pyyaml==3.13
 ruamel.yaml==0.15.80
 python-nmap==0.6.1
+redis==3.0.1
+pymongo==3.7.1

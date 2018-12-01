@@ -21,7 +21,6 @@ from django.views.static import serve
 
 from system.views_user import IndexView, LoginView, LogoutView
 
-
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', IndexView.as_view(), name='index'),
