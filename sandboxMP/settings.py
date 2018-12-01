@@ -41,7 +41,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'system',
     'cmdb',
-    'django_filters',
 ]
 
 MIDDLEWARE = [

@@ -13,3 +13,4 @@ urlpatterns = [
     path('portal/code/update/', views_code.CodeUpdateView.as_view(), name='portal-code-update'),
     path('portal/code/delete/', views_code.CodeDeleteView.as_view(), name='portal-code-delete'),
 ]
+
