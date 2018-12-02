@@ -9,7 +9,7 @@ from system.mixin import LoginRequiredMixin
 from custom import (BreadcrumbMixin, SandboxCreateView,
                     SandboxListView, SandboxUpdateView, SandboxDeleteView)
 from .models import Code
-from .forms import CodeCreateForm
+from .forms import CodeCreateForm, CodeUpdateForm
 
 
 class CodeView(LoginRequiredMixin, BreadcrumbMixin, TemplateView):
@@ -83,7 +83,7 @@ class CodeListView(SandboxListView):
 
 class CodeUpdateView(SandboxUpdateView):
     model = Code
-    fields = '__all__'
+    form_class = CodeUpdateForm
     template_name_suffix = '_update'
 
     def get_context_data(self, **kwargs):

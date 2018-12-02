@@ -4,7 +4,6 @@ from .models import Code
 
 
 class CodeCreateForm(forms.ModelForm):
-
     class Meta:
         model = Code
         fields = '__all__'
@@ -24,3 +23,21 @@ class CodeCreateForm(forms.ModelForm):
 
         if Code.objects.filter(value=value).count():
             raise forms.ValidationError('value: {}已存在'.format(value))
+
+
+class CodeUpdateForm(CodeCreateForm):
+
+    def clean(self):
+        cleaned_data = self.cleaned_data
+        key = cleaned_data.get('key')
+        value = cleaned_data.get('value')
+
+        if self.instance:
+            matching_code = Code.objects.exclude(pk=self.instance.pk)
+            if matching_code.filter(key=key).exists():
+                msg = 'key：{} 已经存在'.format(key)
+                raise forms.ValidationError(msg)
+            if matching_code.filter(value=value).exists():
+                msg = 'value：{} 已经存在'.format(value)
+                raise forms.ValidationError(msg)
+

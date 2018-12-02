@@ -7,7 +7,7 @@
 {% block main %}
     <div class="box box-danger">
         <form class="form-horizontal" id="addForm" method="post">
-        <input type="hidden" name='id' value="{{ code.id }}"/>
+        <input type="hidden" name='id' type='text' value="{{ code.id }}"/>
             {% csrf_token %}
             <div class="box-body">
                 <fieldset>
