@@ -1,0 +1,13 @@
+hosts:
+    # Scan IP address, networks or IP address rage. Examlpes:'172.16.3.0/24' or '172.16.3.10-20'
+    net_address:
+            - '172.16.3.0/24'
+            - '172.16.2.100-105'
+
+
+
+
+
+
+
+
