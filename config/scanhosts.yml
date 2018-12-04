@@ -4,7 +4,20 @@ hosts:
             - '172.16.3.0/24'
             - '172.16.2.100-105'
 
+    # Login password for Linux system. a password list
+    ssh_password: '1234@abcd.com'
 
+    ssh_private_key: '/root/.ssh/id_rsa'
+
+    commands:
+            - 'hostname'
+            - 'cat /etc/redhat-release'
+            - 'dmidecode -s system-serial-number'
+            - 'dmidecode -s system-manufacturer'
+            - 'dmidecode -s system-product-name'
+            - 'cat /sys/class/net/[^tsbvl]*/address'
+
+    email: 'robbie_han@outlook.com'
 
 
 

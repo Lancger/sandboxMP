@@ -172,7 +172,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'standard': {
-            'format': '[%(asctime)s][%(threadName)s:%(thread)d][task_id:%(name)s][%(levelname)s]'
+            'format': '[%(asctime)s][task_id:%(name)s][%(levelname)s]'
                       '[%(filename)s:%(lineno)d][%(message)s]'
         },
         'simple': {

@@ -5,60 +5,14 @@ from django.conf import settings
 import nmap
 import yaml
 import logging
+import paramiko
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'sandboxMP.settings')
 error_logger = logging.getLogger('sandbox_error')
 
 
-class SandboxScan(object):
-
+class ConfigFileMixin:
     config_file = None
-
-    def basic_scan(self):
-        """
-        Use ICMP discovery online hosts and return online hosts.
-
-        """
-        hosts = self.get_hosts()
-        nm = nmap.PortScanner()
-        nm.scan(hosts=hosts, arguments='-n -sP -PE')
-        return nm.all_hosts()
-
-    def os_scan(self):
-        """
-        Get the system type by nmap scan and return hosts list with os type.
-        """
-        hosts = self.get_hosts()
-        nm = nmap.PortScanner()
-        nm.scan(hosts=hosts, arguments='-n sS -O')
-        online_hosts = []
-        for host in nm.all_hosts():
-            try:
-                os = nm[host]['osmatch'][0]['osclass'][0]['osfamily']
-            except Exception:
-                os = 'unknown'
-            host_dict = {'host': host, 'os': os}
-            online_hosts.append(host_dict)
-        return online_hosts
-
-    def get_hosts(self, hosts=None):
-        """
-        Return the hosts that will be used to scan.
-        Subclasses can override this to return any hosts.
-        """
-        if hosts is None:
-            _config = self.get_config_file()
-            with open(_config) as f:
-                scan_hosts_info = yaml.load(f)
-                try:
-                    hosts_list = scan_hosts_info['hosts']['net_address']
-                    hosts = ' '.join(str(i) for i in hosts_list)
-                    return hosts
-                except Exception:
-                    msg = '{}.get_hosts() is missing a hosts.'.format(self.__class__.__name__)
-                    error_logger.error(msg)
-                    raise TypeError(msg)
-        return hosts
 
     def get_config_file(self):
         """
@@ -79,5 +33,142 @@ class SandboxScan(object):
 
         return self.config_file
 
+    def get_conf_content(self, content=None):
+        """
+        Get the configuration content from config file .
+        Example ssh_password, commands, email which is in the config file.
+        """
+        if content is not None:
+            _config = self.get_config_file()
+            with open(_config) as f:
+                scan_hosts_config = yaml.load(f)
+                try:
+                    content = scan_hosts_config['hosts'][content]
+                    return content
+                except Exception as e:
+                    msg = '%(exc)s is not in %(config)s.' % {
+                        'exc': e,
+                        'config': _config
+                    }
+                    error_logger.error(msg)
+
+    def login_execution(self, auth_type='password', **kwargs):
+        """
+        Support two authentication modes: password and private_key, auth_type default is password.
+        """
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        try:
+            if auth_type == 'password':
+                ssh.connect(
+                    kwargs['hostname'],
+                    kwargs['port'],
+                    kwargs['username'],
+                    kwargs['password'],
+                    timeout=3,
+                )
+                kwargs['auth_type'] = 'password'
+            elif auth_type == 'private_key':
+                ssh.connect(
+                    kwargs['hostname'],
+                    kwargs['port'],
+                    kwargs['username'],
+                    kwargs['private_key'],
+                    timeout=3,
+                )
+                kwargs['auth_type'] = 'private_key'
+            kwargs['status'] = 'success'
+            result = []
+            commands = self.get_commands()
+            for command in commands:
+                stdin, stdout, stderr = ssh.exec_command(command, timeout=5)
+                result.append(str(stdout.read()).strip('b').strip("'"))
+            kwargs['exe_result'] = result
+        except Exception as e:
+            msg = '%(exc)s hostname %(hostname)s' % {
+                'exc': e,
+                'hostname': kwargs['hostname']
+            }
+            error_logger.error(msg)
+            kwargs['status'] = 'failed'
+            kwargs['error_message'] = str(e)
+        return kwargs
+
+    def get_password(self):
+        """
+        Get the password from config file.
+        """
+        return self.get_conf_content('ssh_password')
+
+    def get_commands(self):
+        """
+        Get the commands from config file.
+        """
+        return self.get_conf_content('commands')
+
+    def get_email(self):
+        """
+        Get the email from config file.
+        """
+        return self.get_conf_content('email')
+
+
+class SandboxScan(ConfigFileMixin):
+
+    def basic_scan(self):
+        """
+        Use ICMP discovery online hosts and return online hosts.
+
+        """
+        hosts = self.get_hosts()
+        nm = nmap.PortScanner()
+        nm.scan(hosts=hosts, arguments='-n -sP -PE')
+        online_hosts = nm.all_hosts()
+        return online_hosts
+
+    def os_scan(self):
+        """
+        Get the system type by nmap scan and return hosts list with os type.
+        """
+        hosts = self.get_hosts()
+        nm = nmap.PortScanner()
+        nm.scan(hosts=hosts, arguments='-n sS -O')
+        online_hosts = []
+        for host in nm.all_hosts():
+            try:
+                os = nm[host]['osmatch'][0]['osclass'][0]['osfamily']
+            except Exception:
+                os = 'unknown'
+            host_dict = {'host': host, 'os': os}
+            online_hosts.append(host_dict)
+        return online_hosts
+
+    def get_hosts(self):
+        """
+        Return the hosts that will be used to scan.
+        Subclasses can override this to return any hosts.
+        """
+        hosts_list = self.get_conf_content('hosts')
+        hosts = ' '.join(str(i) for i in hosts_list)
+        return hosts
+
+
+class LoginExecution(ConfigFileMixin):
+
+    def password_login_execution(self, **kwargs):
+        """
+        Login to the remote system with a password.
+        Kwargs is a dict containing hostname, port, username and password.
+        Example: kwargs = {'hostname': '172.16.3.101', 'port': 22, 'username': 'root', 'password': 'paw123'}
+        """
+        return super().login_execution(**kwargs)
+
+    def private_key_login_execution(self, **kwargs):
+        """
+        Login to the remote system with a private_key.
+        Kwargs is a dict containing hostname, port, username and private key.
+        Example:kwargs = {'hostname': '172.16.3.101', 'port': 22, 'username': 'root', 'private_key': '/root/.ssh/id_rsa'}
+        """
+        return super().login_execution(auth_type='private_key', **kwargs)
 
 
