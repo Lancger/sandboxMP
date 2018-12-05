@@ -23,7 +23,7 @@ class Code(AbstractCode):
 
 class ConnectionInfo(models.Model):
     auth_method_choices = (
-        ('rsa', '公钥认证'),
+        ('private_key', '密钥认证'),
         ('password', '密码认证')
     )
 

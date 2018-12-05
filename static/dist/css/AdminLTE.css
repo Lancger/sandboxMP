@@ -2640,9 +2640,9 @@ a:focus {
   font-weight: 600;
 }
 .products-list .product-description {
-  display: block;
+  display: -webkit-box;
   color: #999;
-  overflow: hidden;
+  overflow: scroll;
   white-space: nowrap;
   text-overflow: ellipsis;
 }

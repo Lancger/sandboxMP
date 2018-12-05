@@ -40,47 +40,6 @@ class CodeListView(SandboxListView):
         return super().get(request)
 
 
-# from django.http import JsonResponse
-# from django.views.generic import View
-# class CodeListView(LoginRequiredMixin, View):
-#     fields = ['id', 'key', 'value', 'parent__value']
-#     filters = {}
-#
-#     def get(self, request):
-#         context = self.get_datatables_paginator(request)
-#         return JsonResponse(context)
-#
-#     def get_datatables_paginator(self, request):
-#         datatables = request.GET
-#         draw = int(datatables.get('draw'))
-#         start = int(datatables.get('start'))
-#         length = int(datatables.get('length'))
-#         order_column = datatables.get('order[0][column]')
-#         order_dir = datatables.get('order[0][dir]')
-#         order_field = datatables.get('columns[{}][data]'.format(order_column))
-#         if order_dir == 'asc':
-#             queryset = Code.objects.all().order_by(order_field)
-#         else:
-#             queryset = Code.objects.all().order_by('-{0}'.format(order_field))
-#         record_total_count = queryset.count()
-#         if self.filters:
-#             queryset = queryset.filter(**self.filters)
-#         if self.fields:
-#             queryset = queryset.values(*self.fields)
-#         record_filter_count = queryset.count()
-#
-#         object_list = queryset[start:(start+length)]
-#
-#         data = list(object_list)
-#
-#         return {
-#             'draw': draw,
-#             'recordsTotal': record_total_count,
-#             'recordsFiltered': record_filter_count,
-#             'data': data,
-#         }
-
-
 class CodeUpdateView(SandboxUpdateView):
     model = Code
     form_class = CodeUpdateForm

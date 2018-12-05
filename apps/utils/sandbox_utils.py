@@ -33,28 +33,89 @@ class ConfigFileMixin:
 
         return self.config_file
 
-    def get_conf_content(self, content=None):
+    def get_conf_content(self, *key):
         """
         Get the configuration content from config file .
         Example ssh_password, commands, email which is in the config file.
         """
-        if content is not None:
-            _config = self.get_config_file()
-            with open(_config) as f:
-                scan_hosts_config = yaml.load(f)
-                try:
-                    content = scan_hosts_config['hosts'][content]
-                    return content
-                except Exception as e:
-                    msg = '%(exc)s is not in %(config)s.' % {
-                        'exc': e,
-                        'config': _config
-                    }
-                    error_logger.error(msg)
+        _config = self.get_config_file()
+        with open(_config) as f:
+            content = yaml.load(f)
+        if key is not None:
+            try:
+                num = 0
+                while num < len(key):
+                    content = content[key[num]]
+                    num += 1
+            except Exception as e:
+                msg = '%(exc)s is not in %(config)s.' % {
+                    'exc': e,
+                    'config': _config
+                }
+                error_logger.error(msg)
+        return content
+
+    def get_commands(self):
+        """
+        Get the commands from config file.
+        """
+        key = ['hosts', 'commands']
+        return self.get_conf_content(*key)
+
+    def get_net_address(self):
+        """
+        Return the hosts that will be used to scan.
+        Subclasses can override this to return any hosts.
+        """
+        key = ['hosts', 'net_address']
+        return self.get_conf_content(*key)
+
+
+class SandboxScan(ConfigFileMixin):
+
+    def basic_scan(self):
+        """
+        Use ICMP discovery online hosts and return online hosts.
+
+        """
+        hosts = self.get_net_address()
+        nm = nmap.PortScanner()
+        nm.scan(hosts=hosts, arguments='-n -sP -PE')
+        online_hosts = nm.all_hosts()
+        return online_hosts
+
+    def os_scan(self):
+        """
+        Get the system type by nmap scan and return hosts list with os type.
+        """
+        hosts = self.get_net_address()
+        nm = nmap.PortScanner()
+        nm.scan(hosts=hosts, arguments='-n sS -O')
+        online_hosts = []
+        for host in nm.all_hosts():
+            try:
+                os = nm[host]['osmatch'][0]['osclass'][0]['osfamily']
+            except Exception:
+                os = 'unknown'
+            host_dict = {'host': host, 'os': os}
+            online_hosts.append(host_dict)
+        return online_hosts
+
+    def get_hosts(self):
+        """
+        Return the hosts that will be used to scan.
+        Subclasses can override this to return any hosts.
+        """
+        hosts_list = super().get_conf_content('net_address')
+        hosts = ' '.join(str(i) for i in hosts_list)
+        return hosts
+
+
+class LoginExecution(ConfigFileMixin):
 
     def login_execution(self, auth_type='password', **kwargs):
         """
-        Support two authentication modes: password and private_key, auth_type default is password.
+        Support two authentication modes: password and private_key, and auth_type default is password.
         """
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -94,74 +155,13 @@ class ConfigFileMixin:
             kwargs['error_message'] = str(e)
         return kwargs
 
-    def get_password(self):
-        """
-        Get the password from config file.
-        """
-        return self.get_conf_content('ssh_password')
-
-    def get_commands(self):
-        """
-        Get the commands from config file.
-        """
-        return self.get_conf_content('commands')
-
-    def get_email(self):
-        """
-        Get the email from config file.
-        """
-        return self.get_conf_content('email')
-
-
-class SandboxScan(ConfigFileMixin):
-
-    def basic_scan(self):
-        """
-        Use ICMP discovery online hosts and return online hosts.
-
-        """
-        hosts = self.get_hosts()
-        nm = nmap.PortScanner()
-        nm.scan(hosts=hosts, arguments='-n -sP -PE')
-        online_hosts = nm.all_hosts()
-        return online_hosts
-
-    def os_scan(self):
-        """
-        Get the system type by nmap scan and return hosts list with os type.
-        """
-        hosts = self.get_hosts()
-        nm = nmap.PortScanner()
-        nm.scan(hosts=hosts, arguments='-n sS -O')
-        online_hosts = []
-        for host in nm.all_hosts():
-            try:
-                os = nm[host]['osmatch'][0]['osclass'][0]['osfamily']
-            except Exception:
-                os = 'unknown'
-            host_dict = {'host': host, 'os': os}
-            online_hosts.append(host_dict)
-        return online_hosts
-
-    def get_hosts(self):
-        """
-        Return the hosts that will be used to scan.
-        Subclasses can override this to return any hosts.
-        """
-        hosts_list = self.get_conf_content('hosts')
-        hosts = ' '.join(str(i) for i in hosts_list)
-        return hosts
-
-
-class LoginExecution(ConfigFileMixin):
-
     def password_login_execution(self, **kwargs):
         """
         Login to the remote system with a password.
         Kwargs is a dict containing hostname, port, username and password.
         Example: kwargs = {'hostname': '172.16.3.101', 'port': 22, 'username': 'root', 'password': 'paw123'}
         """
-        return super().login_execution(**kwargs)
+        return self.login_execution(**kwargs)
 
     def private_key_login_execution(self, **kwargs):
         """
@@ -169,6 +169,5 @@ class LoginExecution(ConfigFileMixin):
         Kwargs is a dict containing hostname, port, username and private key.
         Example:kwargs = {'hostname': '172.16.3.101', 'port': 22, 'username': 'root', 'private_key': '/root/.ssh/id_rsa'}
         """
-        return super().login_execution(auth_type='private_key', **kwargs)
-
+        return self.login_execution(auth_type='private_key', **kwargs)
 

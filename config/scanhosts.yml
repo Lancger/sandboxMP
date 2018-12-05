@@ -5,6 +5,7 @@ hosts:
             - '172.16.2.100-105'
 
     # Login password for Linux system. a password list
+    ssh_username: 'root'
     ssh_password: '1234@abcd.com'
 
     ssh_private_key: '/root/.ssh/id_rsa'
@@ -18,6 +19,18 @@ hosts:
             - 'cat /sys/class/net/[^tsbvl]*/address'
 
     email: 'robbie_han@outlook.com'
+
+    # Whether to send an email notification after the scan is completed, true or false.
+    send_email: 'false'
+
+    # Scan type consists of two parts, basic scan and enhanced scan, the default type is basic_scan.
+    # basic_scan just running basic_scan to find online hosts.
+    # enhanced_scan will be running os_scan and LoginExecution to get more info of online hosts.
+    scan_type: 'basic_scan'
+
+    # Support two authentication modes: password and private_key, and default is password.
+    auth_type: 'private_key'
+
 
 
 
