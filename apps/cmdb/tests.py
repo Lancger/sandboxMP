@@ -8,7 +8,8 @@ error_logger = logging.getLogger('sandbox_error')
 from utils.sandbox_utils import SandboxScan, LoginExecution
 
 scan = SandboxScan()
-le = LoginExecution()
+execution = LoginExecution()
+
 
 class TestLoggingView(View):
 
@@ -18,9 +19,7 @@ class TestLoggingView(View):
         # end_time = time.time()
         # work_time = (end_time - start_time)
         # data['work_time'] = work_time
-        # kwargs = {'hostname': '172.16.3.101', 'port': 22, 'username': 'root', 'password': 'leadsec@7766'}
-        # password_data = self.password_login_execution(**kwargs)
-
+        # kwargs = {'hostname': '172.16.3.102', 'port': 22, 'username': 'root', 'private_key': '/root/.ssh/id_rsa'}
 
         # hosts = self.basic_scan()
         # key_data = []
@@ -38,6 +37,15 @@ class TestLoggingView(View):
         # data['hosts'] = hosts
         # data['auth_type1'] = le.get_auth_type()
         # data['scan_type'] = le.get_scan_type()
-        key = ['hosts', 'net_address']
-        data = le.get_conf_content(*key)
-        return JsonResponse(data)
+        # key = ['hosts']
+        # data = le.get_conf_content(*key)
+        kwargs = {
+            'hostname': '172.16.3.101',
+            'username': execution.get_ssh_username(),
+            'port': execution.get_ssh_port(),
+            'password': execution.get_ssh_password(),
+            'private_key': execution.get_ssh_private_key()
+        }
+        defaults = execution.login_execution(auth_type='private_key', **kwargs)
+
+        return JsonResponse(defaults)

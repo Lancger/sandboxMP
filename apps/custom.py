@@ -87,6 +87,7 @@ class SandboxMultipleObjectMixin:
             queryset = queryset.filter(**self.filters)
         if fields:
             queryset = queryset.values(*self.fields)
+
         record_filter_count = queryset.count()
 
         object_list = queryset[start:(start + length)]
@@ -161,3 +162,4 @@ class SandboxDeleteView(LoginRequiredMixin, SandboxMultipleObjectMixin, View):
             raise AttributeError("Sandbox delete view %s must be called with id. "
                                  % self.__class__.__name__)
         return JsonResponse(context)
+

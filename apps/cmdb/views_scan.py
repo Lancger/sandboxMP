@@ -3,22 +3,29 @@
 # @File   : views_scan.py
 
 import ast
+import logging
 from ruamel import yaml
 
-from django.views.generic import View
+from django.views.generic import View, TemplateView
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 
 from system.mixin import LoginRequiredMixin
-from custom import BreadcrumbMixin
-from utils.sandbox_utils import ConfigFileMixin
+from custom import BreadcrumbMixin, SandboxListView, SandboxDeleteView
+from utils.sandbox_utils import ConfigFileMixin, SandboxScan, LoginExecution
+from system.models import Menu
+from .models import DeviceScanInfo
+
+logger = logging.getLogger('sandbox_error')
 
 
 class ScanConfigView(LoginRequiredMixin, BreadcrumbMixin, ConfigFileMixin, View):
 
     def get(self, request):
+        menu = Menu.get_menu_by_request_url(request.path_info)
         template_name = 'cmdb/scan_config.html'
         context = self.get_conf_content()
+        context.update(menu)
         return render(request, template_name, context)
 
     def post(self, request):
@@ -28,6 +35,7 @@ class ScanConfigView(LoginRequiredMixin, BreadcrumbMixin, ConfigFileMixin, View)
         try:
             config['net_address'] = ast.literal_eval(hosts['net_address'])
             config['ssh_username'] = hosts['ssh_username']
+            config['ssh_port'] = hosts['ssh_port']
             config['ssh_password'] = hosts['ssh_password']
             config['ssh_private_key'] = hosts['ssh_private_key']
             config['commands'] = ast.literal_eval(hosts['commands'])
@@ -38,11 +46,74 @@ class ScanConfigView(LoginRequiredMixin, BreadcrumbMixin, ConfigFileMixin, View)
             data = dict(hosts=config)
             config_file = self.get_config_file()
             with open(config_file, 'w', encoding='utf-8') as f:
-                yaml.dump(data, f,  Dumper=yaml.RoundTripDumper, indent=4)
+                yaml.dump(data, f, Dumper=yaml.RoundTripDumper, indent=4)
                 ret['result'] = True
         except Exception as e:
-            raise TypeError(e)
+            logger.error(e)
 
         return JsonResponse(ret)
 
+
+class DeviceScanView(LoginRequiredMixin, BreadcrumbMixin, TemplateView):
+    template_name = 'cmdb/device_scan.html'
+
+
+class DeviceScanExecView(LoginRequiredMixin, View):
+
+    def get(self, reqeust):
+        scan = SandboxScan()
+        execution = LoginExecution()
+        scan_type = execution.get_scan_type()
+        auth_type = execution.get_auth_type()
+
+        if scan_type == 'basic_scan':
+            hosts = scan.basic_scan()
+            for host in hosts:
+                DeviceScanInfo.objects.update_or_create(
+                    hostname=host,
+                )
+        else:
+            hosts = scan.os_scan()
+            login_hosts = [host for host in hosts if host['os'] in ['Linux', 'embedded']]
+            nologin_hosts = [host for host in hosts if host not in login_hosts]
+            for host in nologin_hosts:
+                DeviceScanInfo.objects.update_or_create(
+                    hostname=host['host'],
+                    defaults={
+                        'os_type': host['os']
+                    }
+                )
+            for host in login_hosts:
+                kwargs = {
+                    'hostname': host['host'],
+                    'username': execution.get_ssh_username(),
+                    'port': execution.get_ssh_port(),
+                    'password': execution.get_ssh_password(),
+                    'private_key': execution.get_ssh_private_key()
+                }
+                defaults = execution.login_execution(auth_type=auth_type, **kwargs)
+                DeviceScanInfo.objects.update_or_create(
+                    hostname=host['host'],
+                    defaults=defaults
+                )
+        return JsonResponse({'result': True, 'msg': '扫描任务已下发'})
+
+
+class DeviceScanListView(SandboxListView):
+    model = DeviceScanInfo
+    fields = ['id', 'sys_hostname', 'hostname', 'mac_address', 'auth_type', 'status', 'os_type', 'device_type']
+
+
+class DeviceScanDetailView(LoginExecution, View):
+
+    def get(self, request):
+        ret = Menu.get_menu_by_request_url(request.path_info)
+        if 'id' in request.GET and request.GET['id']:
+            device = get_object_or_404(DeviceScanInfo, pk=int(request.GET['id']))
+            ret['device'] = device
+        return render(request, 'cmdb/device_scan_detail.html', ret)
+
+
+class DeviceScanDeleteView(SandboxDeleteView):
+    model = DeviceScanInfo
 

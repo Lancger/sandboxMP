@@ -6,17 +6,19 @@ hosts:
 
     # Login password for Linux system. a password list
     ssh_username: 'root'
+    ssh_port: '22'
     ssh_password: '1234@abcd.com'
 
     ssh_private_key: '/root/.ssh/id_rsa'
 
     commands:
-            - 'hostname'
-            - 'cat /etc/redhat-release'
-            - 'dmidecode -s system-serial-number'
-            - 'dmidecode -s system-manufacturer'
-            - 'dmidecode -s system-product-name'
-            - 'cat /sys/class/net/[^tsbvl]*/address'
+            sys_hostname: 'hostname'
+            mac_address: 'cat /sys/class/net/[^tsbvl]*/address'
+            sn_number: 'dmidecode -s system-serial-number'
+            os_type: 'cat /etc/redhat-release'
+            device_type: 'echo `dmidecode -s system-manufacturer &&  dmidecode -s system-product-name`'
+
+
 
     email: 'robbie_han@outlook.com'
 

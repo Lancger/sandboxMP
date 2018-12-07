@@ -4,6 +4,33 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
+class DeviceScanInfo(models.Model):
+    auth_method_choices = (
+        ('private_key', '密钥认证'),
+        ('password', '密码认证')
+    )
+    hostname = models.CharField(max_length=50, verbose_name='主机域名或IP')
+    port = models.IntegerField(default=22, verbose_name='SSH端口')
+    username = models.CharField(max_length=15, blank=True, default='', verbose_name='SSH用户名')
+    password = models.CharField(max_length=80, blank=True, default='', verbose_name='SSH密码')
+    private_key = models.CharField(max_length=100, blank=True, default='', verbose_name='密钥路径')
+    auth_type = models.CharField(max_length=30, choices=auth_method_choices, default='password')
+    status = models.CharField(max_length=10, blank=True, default='')
+    sys_hostname = models.CharField(max_length=50, blank=True, default='', verbose_name='主机名')
+    mac_address = models.CharField(max_length=50, blank=True, default='', verbose_name='MAC地址')
+    sn_number = models.CharField(max_length=50, blank=True, default='', verbose_name='SN号码')
+    os_type = models.CharField(max_length=50, blank=True, default='', verbose_name='系统类型')
+    device_type = models.CharField(max_length=50, blank=True, default='', verbose_name='设备类型')
+    error_message = models.CharField(max_length=80, blank=True, default='', verbose_name='错误信息')
+    add_time = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
+    modify_time = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+
+
+    class Meta:
+        verbose_name = '扫描信息'
+        verbose_name_plural = verbose_name
+
+
 class AbstractCode(models.Model):
     parent = models.ForeignKey(
         'self', blank=True, null=True, on_delete=models.SET_NULL, related_name='child'
@@ -54,13 +81,13 @@ class DeviceInfo(models.Model):
     number = models.CharField(max_length=50, verbose_name='设备编号')
     name = models.CharField(max_length=50, verbose_name='设备名称')
     ip_address = models.GenericIPAddressField(verbose_name='IP地址')
-    mac_address = models.CharField(max_length=20, blank=True, null=True, verbose_name='MAC地址')
-    sn_number = models.CharField(max_length=100, blank=True, null=True, verbose_name='SN编号')
-    device_type = models.IntegerField(blank=True, verbose_name='设备类型')
+    mac_address = models.CharField(max_length=50, blank=True, null=True, verbose_name='MAC地址')
+    sn_number = models.CharField(max_length=50, blank=True, null=True, verbose_name='SN号码')
+    device_type = models.CharField(max_length=50, blank=True, null=True, verbose_name='设备类型')
+    os_type = models.CharField(max_length=50, blank=True, null=True, verbose_name='系统类型')
     network_type = models.IntegerField(blank=True, verbose_name='网络类型')
     service_type = models.IntegerField(blank=True,  verbose_name='服务类型')
     operation_type = models.IntegerField(blank=True, verbose_name='业务类型')
-    os_type = models.IntegerField(blank=True, verbose_name='系统类型')
     desc = models.TextField(blank=True, verbose_name='备注信息')
     leader = models.ForeignKey(
         User,

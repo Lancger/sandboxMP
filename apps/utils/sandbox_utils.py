@@ -101,12 +101,12 @@ class SandboxScan(ConfigFileMixin):
             online_hosts.append(host_dict)
         return online_hosts
 
-    def get_hosts(self):
+    def get_net_address(self):
         """
         Return the hosts that will be used to scan.
-        Subclasses can override this to return any hosts.
+        Subclasses can override this to return any hosts.`
         """
-        hosts_list = super().get_conf_content('net_address')
+        hosts_list = super().get_net_address()
         hosts = ' '.join(str(i) for i in hosts_list)
         return hosts
 
@@ -130,21 +130,22 @@ class LoginExecution(ConfigFileMixin):
                 )
                 kwargs['auth_type'] = 'password'
             elif auth_type == 'private_key':
+                kwargs['auth_type'] = 'private_key'
+                private_key = paramiko.RSAKey.from_private_key_file(kwargs['private_key'])
                 ssh.connect(
                     kwargs['hostname'],
                     kwargs['port'],
                     kwargs['username'],
-                    kwargs['private_key'],
+                    private_key,
                     timeout=3,
                 )
-                kwargs['auth_type'] = 'private_key'
-            kwargs['status'] = 'success'
-            result = []
+            kwargs['status'] = 'succeed'
+            kwargs['error_message'] = ''
             commands = self.get_commands()
-            for command in commands:
-                stdin, stdout, stderr = ssh.exec_command(command, timeout=5)
-                result.append(str(stdout.read()).strip('b').strip("'"))
-            kwargs['exe_result'] = result
+            for key, value in commands.items():
+                stdin, stdout, stderr = ssh.exec_command(value, timeout=5)
+                result = str(stdout.read()).strip('b').strip("'").strip('\\n')
+                kwargs[key] = result
         except Exception as e:
             msg = '%(exc)s hostname %(hostname)s' % {
                 'exc': e,
@@ -170,4 +171,37 @@ class LoginExecution(ConfigFileMixin):
         Example:kwargs = {'hostname': '172.16.3.101', 'port': 22, 'username': 'root', 'private_key': '/root/.ssh/id_rsa'}
         """
         return self.login_execution(auth_type='private_key', **kwargs)
+
+    def get_auth_type(self):
+        key = ['hosts', 'auth_type']
+        return self.get_conf_content(*key)
+
+    def get_ssh_username(self):
+        key = ['hosts', 'ssh_username']
+        return self.get_conf_content(*key)
+
+    def get_ssh_port(self):
+        key = ['hosts', 'ssh_port']
+        return self.get_conf_content(*key)
+
+    def get_ssh_password(self):
+        key = ['hosts', 'ssh_password']
+        return self.get_conf_content(*key)
+
+    def get_ssh_private_key(self):
+        key = ['hosts', 'ssh_private_key']
+        return self.get_conf_content(*key)
+
+    def get_email(self):
+        key = ['hosts', 'email']
+        return self.get_conf_content(*key)
+
+    def get_send_email(self):
+        key = ['hosts', 'send_email']
+        return self.get_conf_content(*key)
+
+    def get_scan_type(self):
+        key = ['hosts', 'scan_type']
+        return self.get_conf_content(*key)
+
 

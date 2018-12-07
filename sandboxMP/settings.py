@@ -173,7 +173,7 @@ LOGGING = {
     'formatters': {
         'standard': {
             'format': '[%(asctime)s][task_id:%(name)s][%(levelname)s]'
-                      '[%(filename)s:%(lineno)d][%(message)s]'
+                      '[%(filename)s:%(lineno)d]%(message)s'
         },
         'simple': {
             'format': '[%(levelname)s][%(asctime)s][%(filename)s:%(lineno)d]%(message)s'
