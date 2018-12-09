@@ -115,7 +115,7 @@ class LoginExecution(ConfigFileMixin):
 
     def login_execution(self, auth_type='password', **kwargs):
         """
-        Support two authentication modes: password and private_key, and auth_type default is password.
+        Support two authentication modes: password or private_key, and auth_type default is password.
         """
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())

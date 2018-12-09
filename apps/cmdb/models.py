@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.db import models
 from django.contrib.auth import get_user_model
 
@@ -25,27 +27,28 @@ class DeviceScanInfo(models.Model):
     add_time = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
     modify_time = models.DateTimeField(auto_now=True, verbose_name="更新时间")
 
-
     class Meta:
         verbose_name = '扫描信息'
         verbose_name_plural = verbose_name
 
 
-class AbstractCode(models.Model):
+class AbstractMode(models.Model):
     parent = models.ForeignKey(
         'self', blank=True, null=True, on_delete=models.SET_NULL, related_name='child'
     )
 
     class Meta:
         abstract = True
-        verbose_name = '字典'
-        verbose_name_plural = verbose_name
 
 
-class Code(AbstractCode):
+class Code(AbstractMode):
     key = models.CharField(max_length=80, verbose_name='键')
     value = models.CharField(max_length=80, verbose_name='值')
     desc = models.BooleanField(default=True, verbose_name='备注')
+
+    class Meta:
+        verbose_name = '字典'
+        verbose_name_plural = verbose_name
 
 
 class ConnectionInfo(models.Model):
@@ -56,12 +59,12 @@ class ConnectionInfo(models.Model):
 
     username = models.CharField(max_length=15, verbose_name='SSH用户名')
     password = models.CharField(max_length=15, verbose_name='SSH密码')
-    ssh_ip = models.GenericIPAddressField(verbose_name='SSH远程IP')
-    ssh_port = models.IntegerField(default=22, verbose_name='SSH端口')
-    auth_method = models.CharField(max_length=10, choices=auth_method_choices, default='password')
-    ssh_rsa = models.CharField(max_length=80, blank=True, null=True, verbose_name='ssh私钥')
-    rsa_pass = models.CharField(max_length=15, blank=True, null=True, verbose_name='私钥密码')
-    ssh_status = models.BooleanField(default=True, verbose_name='登陆状态')
+    ip_address = models.GenericIPAddressField(verbose_name='SSH远程IP')
+    port = models.IntegerField(default=22, verbose_name='SSH端口')
+    auth_type = models.CharField(max_length=10, choices=auth_method_choices, default='password')
+    private_key = models.CharField(max_length=80, blank=True, null=True, verbose_name='ssh私钥')
+    key_pass = models.CharField(max_length=20, blank=True, null=True, verbose_name='私钥密码')
+    status = models.BooleanField(default=True, verbose_name='登陆状态')
 
     class Meta:
         verbose_name = 'SSH连接信息'
@@ -77,9 +80,9 @@ class Cabinet(models.Model):
         verbose_name_plural = verbose_name
 
 
-class DeviceInfo(models.Model):
+class DeviceInfo(AbstractMode):
     number = models.CharField(max_length=50, verbose_name='设备编号')
-    name = models.CharField(max_length=50, verbose_name='设备名称')
+    sys_hostname = models.CharField(max_length=50, verbose_name='设备名称')
     ip_address = models.GenericIPAddressField(verbose_name='IP地址')
     mac_address = models.CharField(max_length=50, blank=True, null=True, verbose_name='MAC地址')
     sn_number = models.CharField(max_length=50, blank=True, null=True, verbose_name='SN号码')
@@ -88,6 +91,10 @@ class DeviceInfo(models.Model):
     network_type = models.IntegerField(blank=True, verbose_name='网络类型')
     service_type = models.IntegerField(blank=True,  verbose_name='服务类型')
     operation_type = models.IntegerField(blank=True, verbose_name='业务类型')
+    buyDate = models.DateField(default=datetime.now, verbose_name="购买日期")
+    warrantyDate = models.DateField(default=datetime.now, verbose_name="到保日期")
+    add_time = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
+    modify_time = models.DateTimeField(auto_now=True, verbose_name="最后更新时间")
     desc = models.TextField(blank=True, verbose_name='备注信息')
     leader = models.ForeignKey(
         User,

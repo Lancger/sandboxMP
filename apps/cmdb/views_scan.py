@@ -3,6 +3,7 @@
 # @File   : views_scan.py
 
 import ast
+import time
 import logging
 from ruamel import yaml
 
@@ -12,11 +13,12 @@ from django.shortcuts import render, get_object_or_404
 
 from system.mixin import LoginRequiredMixin
 from custom import BreadcrumbMixin, SandboxListView, SandboxDeleteView
-from utils.sandbox_utils import ConfigFileMixin, SandboxScan, LoginExecution
+from utils.sandbox_utils import ConfigFileMixin, LoginExecution, SandboxScan
 from system.models import Menu
 from .models import DeviceScanInfo
 
-logger = logging.getLogger('sandbox_error')
+error_logger = logging.getLogger('sandbox_error')
+info_logger = logging.getLogger('sandbox_info')
 
 
 class ScanConfigView(LoginRequiredMixin, BreadcrumbMixin, ConfigFileMixin, View):
@@ -49,7 +51,7 @@ class ScanConfigView(LoginRequiredMixin, BreadcrumbMixin, ConfigFileMixin, View)
                 yaml.dump(data, f, Dumper=yaml.RoundTripDumper, indent=4)
                 ret['result'] = True
         except Exception as e:
-            logger.error(e)
+            error_logger.error(e)
 
         return JsonResponse(ret)
 
@@ -65,7 +67,7 @@ class DeviceScanExecView(LoginRequiredMixin, View):
         execution = LoginExecution()
         scan_type = execution.get_scan_type()
         auth_type = execution.get_auth_type()
-
+        start_time = time.time()
         if scan_type == 'basic_scan':
             hosts = scan.basic_scan()
             for host in hosts:
@@ -96,6 +98,12 @@ class DeviceScanExecView(LoginRequiredMixin, View):
                     hostname=host['host'],
                     defaults=defaults
                 )
+        end_time = time.time()
+        msg = 'Scan task execution time: %(time)s Discover the number of hosts: %(num)s' % {
+            'time': end_time - start_time,
+            'num': len(hosts)
+        }
+        info_logger.info(msg)
         return JsonResponse({'result': True, 'msg': '扫描任务已下发'})
 
 
@@ -104,7 +112,7 @@ class DeviceScanListView(SandboxListView):
     fields = ['id', 'sys_hostname', 'hostname', 'mac_address', 'auth_type', 'status', 'os_type', 'device_type']
 
 
-class DeviceScanDetailView(LoginExecution, View):
+class DeviceScanDetailView(LoginRequiredMixin, View):
 
     def get(self, request):
         ret = Menu.get_menu_by_request_url(request.path_info)
@@ -116,4 +124,5 @@ class DeviceScanDetailView(LoginExecution, View):
 
 class DeviceScanDeleteView(SandboxDeleteView):
     model = DeviceScanInfo
+
 
