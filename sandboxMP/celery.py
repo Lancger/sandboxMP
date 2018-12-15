@@ -34,14 +34,14 @@ CELERYD_TASK_TIME_LIMIT = 10 * 30
 
 from datetime import timedelta
 
-CELERYBEAT_SCHEDULE = {
-    'task1': {
-        'task': 'sandbox_add',
-        'schedule': timedelta(seconds=5),
-        'args': (2, 8)
-    },
-
-}
+# CELERYBEAT_SCHEDULE = {
+#     'task1': {
+#         'task': 'sandbox_add',
+#         'schedule': timedelta(seconds=5),
+#         'args': (2, 8)
+#     },
+#
+# }
 
 # @app.task(bind=True)
 # def debug_task(self):
