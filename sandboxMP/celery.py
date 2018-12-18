@@ -32,6 +32,14 @@ CELERYD_MAX_TASKS_PER_CHILD = 100
 
 CELERYD_TASK_TIME_LIMIT = 10 * 30
 
+app.conf.ONCE = {
+    'backend': 'celery_once.backends.Redis',
+    'settings': {
+        'url': 'redis://localhost:6379/3',
+        'default_timeout': 10 * 30
+    }
+}
+
 from datetime import timedelta
 
 # CELERYBEAT_SCHEDULE = {

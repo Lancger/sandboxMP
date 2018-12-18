@@ -54,7 +54,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'apps.system.middleware.MenuCollection',
-    'apps.system.middleware.RbacMiddleware',
+    #'apps.system.middleware.RbacMiddleware',
 ]
 
 ROOT_URLCONF = 'sandboxMP.urls'

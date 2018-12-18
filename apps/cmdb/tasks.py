@@ -6,6 +6,7 @@ import time
 import logging
 
 from celery import shared_task
+from celery_once import QueueOnce
 
 from utils.sandbox_utils import SandboxScan, LoginExecution
 from .models import DeviceScanInfo
@@ -13,7 +14,7 @@ from .models import DeviceScanInfo
 info_logger = logging.getLogger('sandbox_info')
 
 
-@shared_task
+@shared_task(base=QueueOnce)
 def scan_execution():
     scan = SandboxScan()
     execution = LoginExecution()
@@ -51,7 +52,7 @@ def scan_execution():
                 defaults=defaults
             )
     end_time = time.time()
-    msg = 'Scan task execution time: %(time)s Discover the number of hosts: %(num)s' % {
+    msg = 'Scan task has been completed, execution time: %(time)s, %(num)s hosts are up.' % {
         'time': end_time - start_time,
         'num': len(hosts)
     }

@@ -27,7 +27,7 @@
                 </div>
                 <div class="btn-group pull-left">&nbsp</div>
                 <div class="btn-group pull-left">
-                    <button type="button" id="btnSave" class="btn btn-default">
+                    <button type="button" id="btnInbound" class="btn btn-default" onclick="doInbound()">
                         <i class="glyphicon glyphicon-floppy-disk"></i> 执行入库
                     </button>
                 </div>
@@ -187,12 +187,46 @@
                     url: "{% url 'cmdb:portal-device_scan-exec' %}",
                     cache: false,
                     success: function (msg) {
-                        if (msg.result) {
-                            layer.alert(msg.msg, {icon: 1});
+                        if (msg.status == 'success') {
+                            layer.alert('扫描任务已下发', {icon: 1});
                             oDataTable.ajax.reload();
-                        } else {
+                        }
+                        else if (msg.status == 'already_queued') {
+                            layer.alert('当前已有扫描任务正在执行', {icon: 4});
+                            oDataTable.ajax.reload();
+                        }
+                        else {
                             //alert(msg.message);
                             layer.alert('扫描失败', {icon: 2});
+                        }
+                        return;
+                    }
+                });
+            }
+        });
+    }
+
+    //扫面结果入库
+    function doInbound() {
+        layer.alert('确定将扫描结果导入设备管理库吗？', {
+            title: '提示'
+            , icon: 3
+            , time: 0
+            , btn: ['YES', 'NO']
+            , yes: function (index) {
+                layer.close(index);
+                $.ajax({
+                    type: "POST",
+                    url: "{% url 'cmdb:portal-device_scan-inbound' %}",
+                    data: {csrfmiddlewaretoken: '{{ csrf_token }}'},
+                    cache: false,
+                    success: function (msg) {
+                        if (msg.result) {
+                            layer.alert('设备已入库', {icon: 1});
+                        }
+                        else {
+                            //alert(msg.message);
+                            layer.alert('设备入库失败', {icon: 2});
                         }
                         return;
                     }
