@@ -1,7 +1,9 @@
+import os
 from datetime import datetime
 
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.dispatch import receiver
 
 User = get_user_model()
 
@@ -77,6 +79,7 @@ class ConnectionInfo(ConnectionAbstract, TimeAbstract):
 class Cabinet(models.Model):
     number = models.CharField(max_length=50, verbose_name='机柜编号')
     position = models.CharField(max_length=80, verbose_name='机柜位置')
+    desc = models.TextField(blank=True, default='', verbose_name='备注信息')
 
     class Meta:
         verbose_name = '机柜信息'
@@ -98,3 +101,16 @@ class DeviceInfo(AbstractMode, DeviceAbstract, TimeAbstract):
     class Meta:
         verbose_name = '设备信息'
         verbose_name_plural = verbose_name
+
+
+class DeviceFile(TimeAbstract):
+    device = models.ForeignKey('DeviceInfo', blank=True, null=True, on_delete=models.SET_NULL, verbose_name='设备')
+    file_content = models.FileField(upload_to="asset_file/%Y/%m", null=True, blank=True, verbose_name="资产文件")
+    upload_user = models.CharField(max_length=20, verbose_name="上传人")
+
+
+@receiver(models.signals.post_delete, sender=DeviceFile)
+def auto_delete_file(sender, instance, **kwargs):
+    if instance.file_content:
+        if os.path.isfile(instance.file_content.path):
+            os.remove(instance.file_content.path)

@@ -34,15 +34,17 @@
                 </div>
                 <div class="pull-right">
                     <form class="form-inline" id="queryForm">
-                       <div class="form-group searchArea margin-r-5 margin-top-5">
-                        <label>字典类型：</label>
-                        <select class="form-control inputText select2" name="parent" id="parent">
-                            <option style='text-align:center' value="">---所有---</option>
-                            {% for code in code_parent %}
-                            <option value={{ code.key}}>{{ code.value }}</option>
-                            {% endfor %}
-                        </select>
-                       </div>
+                        <div class="form-group searchArea margin-r-5 margin-top-5">
+                            <label>机柜编号：</label>
+                            <input type="text" name="number" class="form-control inputText" id="number">
+                        </div>
+                        <div class="form-group searchArea margin-r-5 margin-top-5">
+                            <label>机柜位置：</label>
+                            <input type="text" name="position" class="form-control inputText" id="position">
+                        </div>
+                      <button type="button" id="btnSearch" class="btn btn-default">
+                        <i class="glyphicon glyphicon-search"></i>查询
+                      </button>
                     </form>
                 </div>
             </div>
@@ -53,9 +55,9 @@
                     <tr valign="middle">
                         <th><input type="checkbox" id="checkAll"></th>
                         <th>ID</th>
-                        <th>KEY</th>
-                        <th>VALUE</th>
-                        <th>所属</th>
+                        <th>机柜编号</th>
+                        <th>机柜位置</th>
+                        <th>备注信息</th>
                         <th>操作</th>
                     </tr>
                     </thead>
@@ -84,8 +86,8 @@
 <script type="text/javascript">
     // 菜单选中高亮
     $(function () {
-        $('#CMDB-PORTAL').addClass('active');
-        $('#CDMB-PORTAL-CODE').addClass('active');
+        $('#CMDB-EAM').addClass('active');
+        $('#CMDB-EAM-CABINET').addClass('active');
 
     });
 
@@ -100,9 +102,10 @@
 
                 {
                     ajax: {
-                        "url": "{% url 'cmdb:portal-code-list' %}",
+                        "url": "{% url 'cmdb:eam-cabinet-list' %}",
                         "data": function (d) {
-                                d.parent = $("#parent").val();
+                                d.number = $("#number").val();
+                                d.position = $("#position").val();
                             }
                     },
                     columns: [
@@ -112,15 +115,15 @@
                             width: "5%",
                         },
                         {
-                            data: "key",
+                            data: "number",
                             //width : "20%",
                         },
                         {
-                            data: "value",
+                            data: "position",
                             //width : "20%",
                         },
                         {
-                            data: "parent__value",
+                            data: "desc",
                             //width : "20%",
                         },
                         {
@@ -129,7 +132,7 @@
                             bSortable: "false",
                             render: function (data, type, row, meta) {
                                 var ret = "";
-                                var ret = "<button title='详情' onclick='doUpdate("
+                                var ret = "<button title='详情-修改' onclick='doUpdate("
                                     + data + ")'><i class='glyphicon glyphicon-pencil'></i></button>";
                                 ret = ret + "<button title='删除' onclick='doDelete("
                                     + data + ")'><i class='glyphicon glyphicon-trash'></i></button>";
@@ -146,7 +149,7 @@
     $("#btnRefresh").click(function () {
         oDataTable.ajax.reload();
     });
-    //新建字典
+    //新建数据
     $("#btnCreate").click(function () {
         layer.open({
             type: 2,
@@ -154,7 +157,7 @@
             shadeClose: false,
             maxmin: true,
             area: ['800px', '400px'],
-            content: "{% url 'cmdb:portal-code-create' %}",
+            content: "{% url 'cmdb:eam-cabinet-create' %}",
             end: function () {
                 //关闭时做的事情
                 oDataTable.ajax.reload();
@@ -162,7 +165,7 @@
         });
     });
 
-    //修改字典
+    //修改数据
     function doUpdate(id) {
         layer.open({
             type: 2,
@@ -170,7 +173,7 @@
             shadeClose: false,
             maxmin: true,
             area: ['800px', '400px'],
-            content: ["{% url 'cmdb:portal-code-update' %}" + '?id=' + id, 'no'],
+            content: ["{% url 'cmdb:eam-cabinet-update' %}" + '?id=' + id, 'no'],
             end: function () {
                 oDataTable.ajax.reload();
             }
@@ -212,7 +215,7 @@
                 layer.close(index);
                 $.ajax({
                     type: "POST",
-                    url: "{% url 'cmdb:portal-code-delete' %}",
+                    url: "{% url 'cmdb:eam-cabinet-delete' %}",
                     data: {"id": sId, csrfmiddlewaretoken: '{{ csrf_token }}'},
                     cache: false,
                     success: function (msg) {
@@ -241,7 +244,7 @@
                 layer.close(index);
                 $.ajax({
                     type: "POST",
-                    url: "{% url 'cmdb:portal-code-delete' %}",
+                    url: "{% url 'cmdb:eam-cabinet-delete' %}",
                     data: {"id": id, csrfmiddlewaretoken: '{{ csrf_token }}'},
                     cache: false,
                     success: function (msg) {
@@ -265,8 +268,7 @@
         $(".select2").select2();
     });
 
-    //过滤刷新接口获取新的数据
-    $("#parent").change(function () {
+    $("#btnSearch").click(function(){
         oDataTable.ajax.reload();
     });
 
