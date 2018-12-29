@@ -26,7 +26,7 @@ class CodeCreateView(SandboxCreateView):
     template_name_suffix = '_create'
 
     def get_context_data(self, **kwargs):
-        kwargs['code_all'] = Code.objects.all()
+        kwargs['code_parent'] = Code.objects.filter(parent=None)
         return super().get_context_data(**kwargs)
 
 
@@ -46,7 +46,7 @@ class CodeUpdateView(SandboxUpdateView):
     template_name_suffix = '_update'
 
     def get_context_data(self, **kwargs):
-        kwargs['code_all'] = Code.objects.exclude(id=self.request.GET['id'])
+        kwargs['code_parent'] = Code.objects.filter(parent=None)
         return super().get_context_data(**kwargs)
 
 

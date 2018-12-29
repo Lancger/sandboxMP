@@ -33,7 +33,7 @@
                             <select class="form-control select2" name="parent">
                                 <option value={{ code.parent.id }}> {{ code.parent.value }} </option>
                                 <option value=""></option>
-                                {% for parent in code_all %}
+                                {% for parent in code_parent %}
                                     <option value={{ parent.id }}> {{ parent.value }} </option>
                                 {% endfor %}
                             </select>
