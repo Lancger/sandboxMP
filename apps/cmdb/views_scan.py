@@ -110,6 +110,7 @@ class DeviceScanInboundView(LoginRequiredMixin, View):
             )
             connection_id = int(getattr(connection_info, 'id'))
             device_defaults['dev_connection'] = connection_id
+            device_defaults['changed_by_id'] = request.user.id
             DeviceInfo.objects.update_or_create(
                 hostname=host['hostname'],
                 defaults=device_defaults

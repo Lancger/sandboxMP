@@ -41,8 +41,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'simple_history',
     'system',
     'cmdb',
+    'cmdb.templatetags'
 ]
 
 MIDDLEWARE = [
@@ -54,7 +56,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'apps.system.middleware.MenuCollection',
-    #'apps.system.middleware.RbacMiddleware',
+    'apps.system.middleware.RbacMiddleware',
+    'simple_history.middleware.HistoryRequestMiddleware',
 ]
 
 ROOT_URLCONF = 'sandboxMP.urls'
