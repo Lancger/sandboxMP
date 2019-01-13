@@ -98,7 +98,7 @@ class DeviceInfo(AbstractMode, DeviceAbstract, TimeAbstract):
     warrantyDate = models.DateField(default=datetime.now, verbose_name="到保日期")
     desc = models.TextField(blank=True, default='', verbose_name='备注信息')
     changed_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
-    history = HistoricalRecords(excluded_fields=['add_time', 'modify_time'])
+    history = HistoricalRecords(excluded_fields=['add_time', 'modify_time', 'parent'])
 
     class Meta:
         verbose_name = '设备信息'

@@ -135,23 +135,25 @@
               <div class="tab-pane" id="history">
                 <div class="box-body">
                     <ul class="todo-list">
-                        {% for history in all_history %}
+                        {% for log in logs %}
                         <li>
                           <!-- drag handle -->
                               <span class="handle">
                                 <small class="text-maroon">
                                     <i class="glyphicon glyphicon-time"></i>
-                                    {{ history.history_date }}
+                                    {{ log.history_date }}
+                                    &nbsp;&nbsp;
+                                    {{ log.changed_by }}
+                                    &nbsp;&nbsp;
+                                    {{ log.history_type }}
                                 </small>
                               </span>
                             <span class="text-sm">
-                                {{ history.history_user.name }}
-                                &nbsp;&nbsp;&nbsp;
-                                {{ history.history_type }}
-                                &nbsp;&nbsp;&nbsp;
-
+                                {{ log.changes | compare_result }}
                             </span>
+                            <!--
                             <button class="btn btn-xs btn-danger pull-right">还原数据</button>
+                            -->
                         </li>
                         {% endfor %}
                   </ul>

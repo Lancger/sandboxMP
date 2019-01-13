@@ -7,3 +7,4 @@ class CmdbConfig(AppConfig):
     def ready(self):
         from .signals import auto_delete_connection
         from .signals import auto_delete_file
+        from .signals import auto_compare_diff

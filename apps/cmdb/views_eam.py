@@ -15,6 +15,8 @@ from custom import (BreadcrumbMixin, SandboxDeleteView,
                     SandboxListView, SandboxUpdateView, SandboxCreateView)
 from .models import Cabinet, DeviceInfo, Code, ConnectionInfo, DeviceFile
 from .forms import ConnectionInfoForm, DeviceUpdateForm, DeviceCreateForm, DeviceFileUploadForm
+from utils.db_utils import MongodbDriver
+import pymongo
 
 User = get_user_model()
 error_logger = logging.getLogger('sandbox_error')
@@ -99,7 +101,8 @@ class DeviceListView(SandboxListView):
         data = context_data['data']
         for device in data:
             user_id = device['leader']
-            device['leader'] = get_object_or_404(User, pk=int(user_id)).name if user_id else ''
+            device['leader'] = get_object_or_404(
+                User, pk=int(user_id)).name if user_id else ''
         return context_data
 
 
@@ -169,11 +172,12 @@ class DeviceDetailView(LoginRequiredMixin, BreadcrumbMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         device = get_object_or_404(DeviceInfo, pk=int(self.request.GET['id']))
-        all_history = device.history.all()
+        mongo = MongodbDriver()
+        logs = mongo.find(id=int(self.request.GET['id']), sort_by='history_date')
         all_file = device.devicefile_set.all()
         device_public = get_device_public()
         kwargs['device'] = device
-        kwargs['all_history'] = all_history
+        kwargs['logs'] = logs
         kwargs['all_file'] = all_file
         kwargs.update(device_public)
         return super().get_context_data(**kwargs)
@@ -201,6 +205,3 @@ class DeviceFileUploadView(LoginRequiredMixin, View):
 
 class DeviceFileDeleteView(SandboxDeleteView):
     model = DeviceFile
-
-
-
