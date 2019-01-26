@@ -42,8 +42,9 @@ def auto_compare_diff(sender, instance, **kwargs):
         for change in delta.changes:
             changes[change.field] = [change.old, change.new]
     compare_result['changes'] = changes
-    try:
-        mongo = MongodbDriver(collection='change_compare')
-        mongo.insert(compare_result)
-    except Exception as e:
-        pass
+    if compare_result['changes'] or compare_result['history_type'] == 'create':
+        try:
+            mongo = MongodbDriver(collection='change_compare')
+            mongo.insert(compare_result)
+        except Exception as e:
+            pass

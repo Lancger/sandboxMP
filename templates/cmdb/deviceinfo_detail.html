@@ -23,12 +23,13 @@
                                 onclick="doUpload({{ device.id }})">
                             <i class="fa fa-cloud-upload"> 上传资料</i>
                         </button>
-                        <button type="button" class="btn btn-primary btn-sm margin-r-5" title="认证管理" id="doUpdate"
-                                onclick="doDevice2Connection({{ device.id }})">
+                        <button type="button" class="btn btn-primary btn-sm margin-r-5" title="认证管理" onclick="doDevice2Connection({{ device.id }})">
                             <i class="fa fa-user"> 认证管理</i>
                         </button>
-                        <button type="button" class="btn btn-primary btn-sm margin-r-5" title="编辑" id="doUpdate"
-                                onclick="doUpdate({{ device.id }})">
+                        <button type="button" class="btn btn-primary btn-sm margin-r-5" title="自动更新" onclick="doAutoUpdate({{ device.id }})">
+                            <i class="fa fa-circle-o-notch"> 自动更新</i>
+                        </button>
+                        <button type="button" class="btn btn-primary btn-sm margin-r-5" title="编辑" onclick="doUpdate({{ device.id }})">
                             <i class="fa fa-pencil"> 编辑</i>
                         </button>
                         <button type="button" id="btnReturn" class="btn btn-primary btn-sm">
@@ -268,6 +269,48 @@
             }
         });
 
+    }
+
+    //自动更新设备信息
+    function doAutoUpdate(id) {
+        layer.alert('确定自动更新设备信息？', {
+            title: '提示'
+            , icon: 3 //0:感叹号 1：对号 2：差号 3：问号 4：小锁 5：哭脸 6：笑脸
+            , time: 0 //不自动关闭
+            , btn: ['YES', 'NO']
+            , yes: function (index) {
+                layer.close(index);
+                $.ajax({
+                    type: "POST",
+                    data: {"id": id, csrfmiddlewaretoken: '{{ csrf_token }}'},
+                    url: "{% url 'cmdb:eam-device-auto_update_device_info' %}",
+                    cache: false,
+                beforeSend:function(){
+                    this.layerIndex = layer.load(2, {
+                        shade: [0.1,'#fff']
+                        });
+                    },
+                success: function (msg) {
+                    layer.closeAll('loading');
+                    if (msg.status == 'success') {
+                        layer.alert('设备信息更新成功！', {icon: 1}, function(){
+                            parent.location.reload()
+                        });
+                    }
+                    else if (msg.status == 'con_empty') {
+                        layer.alert('请先添加认证信息！', {icon: 4});
+
+                    }
+                    else {
+                        //alert(msg.message);
+                        layer.alert('设备信息更新失败！', {icon: 2});
+                    }
+                    return;
+                }
+
+                });
+            }
+        });
     }
   </script>
 

@@ -9,6 +9,7 @@ from django.views.generic import TemplateView, View
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404, render
 from django.http import JsonResponse
+from django.forms.models import model_to_dict
 
 from system.mixin import LoginRequiredMixin
 from custom import (BreadcrumbMixin, SandboxDeleteView,
@@ -16,7 +17,8 @@ from custom import (BreadcrumbMixin, SandboxDeleteView,
 from .models import Cabinet, DeviceInfo, Code, ConnectionInfo, DeviceFile
 from .forms import ConnectionInfoForm, DeviceUpdateForm, DeviceCreateForm, DeviceFileUploadForm
 from utils.db_utils import MongodbDriver
-import pymongo
+from utils.sandbox_utils import LoginExecution
+
 
 User = get_user_model()
 error_logger = logging.getLogger('sandbox_error')
@@ -205,3 +207,36 @@ class DeviceFileUploadView(LoginRequiredMixin, View):
 
 class DeviceFileDeleteView(SandboxDeleteView):
     model = DeviceFile
+
+
+class AutoUpdateDeviceInfo(LoginRequiredMixin, View):
+
+    def post(self, request):
+        res = dict(status='fail')
+        if 'id' in request.POST and request.POST['id']:
+            device = get_object_or_404(DeviceInfo, pk=int(request.POST['id']))
+            con_id = device.dev_connection
+            conn = ConnectionInfo.objects.filter(id=con_id)
+            if con_id and conn:
+                try:
+                    conn_info = conn.get()
+                    kwargs = model_to_dict(conn_info, exclude=['id', 'auth_type'])
+                    auth_type = conn_info.auth_type
+                    le = LoginExecution()
+                    data = le.login_execution(auth_type=auth_type, **kwargs)
+                    conn_info.status = data['status']
+                    conn_info.save()
+                    if data['status'] == 'succeed':
+                        device.sys_hostname = data['sys_hostname']
+                        device.mac_address = data['mac_address']
+                        device.sn_number = data['sn_number']
+                        device.os_type = data['os_type']
+                        device.device_type = data['device_type']
+                        device.save()
+                        res['status'] = 'success'
+                except conn.model.DoesNotExist:
+                    res['status'] = 'con_empty'
+            else:
+                res['status'] = 'con_empty'
+        return JsonResponse(res)
+

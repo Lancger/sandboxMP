@@ -144,7 +144,7 @@ class LoginExecution(ConfigFileMixin):
             commands = self.get_commands()
             for key, value in commands.items():
                 stdin, stdout, stderr = ssh.exec_command(value, timeout=5)
-                result = str(stdout.read()).strip('b').strip("'").strip('\\n')
+                result = str(stdout.read()).strip('b').strip("'").strip('\\n').strip()
                 kwargs[key] = result
         except Exception as e:
             msg = '%(exc)s hostname %(hostname)s' % {
